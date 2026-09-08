@@ -1,0 +1,23 @@
+{
+  "classifier": {
+    "name": "Random Forest",
+    "accuracy": 86.0,
+    "precision": 86.13,
+    "recall": 86.0,
+    "f1": 85.92
+  },
+  "regressor": {
+    "name": "Linear Regression",
+    "mae": 2.53,
+    "rmse": 3.21,
+    "r2": 0.921
+  },
+  "features": [
+    "gender",
+    "attendance",
+    "study_hours",
+    "previous_score",
+    "assignment_score",
+    "midterm_score"
+  ]
+}

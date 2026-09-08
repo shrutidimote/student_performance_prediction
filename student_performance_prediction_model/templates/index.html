@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Student Performance Prediction</title>
+  <meta name="description"
+    content="AI-powered student performance predictor — enter student details to get a predicted performance grade and final score." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap"
+    rel="stylesheet" />
+  <link rel="stylesheet" href="/static/css/style.css" />
+</head>
+
+<body>
+
+  <!-- ─── Background particles ──────────────────────────────────── -->
+  <div class="bg-orb orb1"></div>
+  <div class="bg-orb orb2"></div>
+  <div class="bg-orb orb3"></div>
+
+  <div class="page-wrapper">
+
+    <!-- ─── Header ────────────────────────────────────────────────── -->
+    <header class="site-header">
+      <div class="header-icon">🎓</div>
+      <div>
+        <h1 class="site-title">Student Performance Prediction</h1>
+        <p class="site-subtitle">AI-powered · Dual Model · Real Machine Learning</p>
+      </div>
+    </header>
+
+    <!-- ─── No-model warning banner ───────────────────────────────── -->
+    {% if not models_ready %}
+    <div class="banner banner-warn" id="model-warn-banner">
+      <span>⚠️</span>
+      <span>
+        Models not found. Please run
+        <code>python src/train.py</code> first, then restart the app.
+      </span>
+    </div>
+    {% endif %}
+
+    <!-- ─── Main card ─────────────────────────────────────────────── -->
+    <main class="card" id="main-card">
+
+      <!-- Card header -->
+      <div class="card-header">
+        <h2 class="card-title">Enter Student Information</h2>
+        <p class="card-desc">Fill in all fields below and click <strong>Predict Result</strong></p>
+      </div>
+
+      <!-- ─── Form ─────────────────────────────────────────────────── -->
+      <form id="prediction-form" novalidate>
+
+        <!-- Row 1: Name + Student ID -->
+        <div class="form-row">
+
+          <div class="form-group">
+            <label class="form-label" for="student_id">
+              <span class="label-icon">🪪</span> Student ID
+            </label>
+            <input type="text" id="student_id" name="student_id" class="form-input" placeholder="e.g. SP0042"
+              autocomplete="off" required />
+          </div>
+        </div>
+
+        <!-- Row 2: Gender -->
+        <div class="form-row form-row-single">
+          <div class="form-group">
+            <label class="form-label" for="gender">
+              <span class="label-icon">⚧</span> Gender
+            </label>
+            <select id="gender" name="gender" class="form-input form-select" required>
+              <option value="" disabled selected>Select gender…</option>
+              <option value="Male">Male</option>
+              <option value="Female">Female</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- Row 3: Attendance + Study Hours -->
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label" for="attendance">
+              <span class="label-icon">📅</span> Attendance (%)
+              <span class="label-hint">50 – 100</span>
+            </label>
+            <input type="number" id="attendance" name="attendance" class="form-input" placeholder="e.g. 85" min="50"
+              max="100" step="0.1" required />
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="study_hours">
+              <span class="label-icon">📚</span> Study Hours / Day
+              <span class="label-hint">1 – 12</span>
+            </label>
+            <input type="number" id="study_hours" name="study_hours" class="form-input" placeholder="e.g. 5" min="1"
+              max="12" step="0.1" required />
+          </div>
+        </div>
+
+        <!-- Row 4: Previous Score + Assignment Score -->
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label" for="previous_score">
+              <span class="label-icon">📝</span> Previous Score
+              <span class="label-hint">0 – 100</span>
+            </label>
+            <input type="number" id="previous_score" name="previous_score" class="form-input" placeholder="e.g. 72"
+              min="0" max="100" step="0.1" required />
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="assignment_score">
+              <span class="label-icon">📋</span> Assignment Score
+              <span class="label-hint">0 – 100</span>
+            </label>
+            <input type="number" id="assignment_score" name="assignment_score" class="form-input" placeholder="e.g. 78"
+              min="0" max="100" step="0.1" required />
+          </div>
+        </div>
+
+        <!-- Row 5: Midterm Score -->
+        <div class="form-row form-row-single">
+          <div class="form-group">
+            <label class="form-label" for="midterm_score">
+              <span class="label-icon">🏫</span> Midterm Score
+              <span class="label-hint">0 – 100</span>
+            </label>
+            <input type="number" id="midterm_score" name="midterm_score" class="form-input" placeholder="e.g. 68"
+              min="0" max="100" step="0.1" required />
+          </div>
+        </div>
+
+        <!-- Error message -->
+        <div id="form-error" class="form-error hidden"></div>
+
+        <!-- Submit button -->
+        <button type="submit" id="submit-btn" class="btn-predict" {% if not models_ready %}disabled{% endif %}>
+          <span id="btn-text">🔮 Predict Result</span>
+          <span id="btn-spinner" class="spinner hidden"></span>
+        </button>
+
+      </form>
+    </main><!-- /.card -->
+
+    <!-- ─── Result card (hidden until prediction is made) ─────────── -->
+    <section class="result-card hidden" id="result-card" aria-live="polite">
+
+      <div class="result-header">
+        <h2 class="result-title">📊 Student Prediction Result</h2>
+        <p class="result-student-name" id="result-student-name"></p>
+        <p class="result-student-id" id="result-student-id"></p>
+      </div>
+
+      <!-- Performance banner -->
+      <div class="performance-banner" id="performance-banner">
+        <p class="perf-label">Predicted Performance</p>
+        <p class="perf-value" id="perf-value">—</p>
+      </div>
+
+      <!-- Score -->
+      <div class="score-row">
+        <div class="score-box">
+          <p class="score-label">Predicted Final Score</p>
+          <p class="score-value" id="score-value">—</p>
+          <p class="score-sub">out of 100</p>
+        </div>
+      </div>
+
+      <!-- Metrics grid -->
+      <div class="metrics-grid">
+
+        <!-- Classification metrics -->
+
+
+        <!-- Regression metrics -->
+
+
+      </div><!-- /.metrics-grid -->
+
+      <!-- Predict again button -->
+      <button class="btn-again" id="btn-again" onclick="resetForm()">
+        ↩ Predict Another Student
+      </button>
+
+    </section><!-- /#result-card -->
+
+    <footer class="site-footer">
+      Student Performance Prediction &nbsp;·&nbsp;
+      ML: scikit-learn &nbsp;·&nbsp; Backend: Flask &nbsp;·&nbsp; Python
+    </footer>
+
+  </div><!-- /.page-wrapper -->
+
+  <script src="/static/js/script.js"></script>
+</body>
+
+</html>
